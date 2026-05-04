@@ -1,0 +1,7 @@
+{
+  "name": "sportStats_frontend",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
