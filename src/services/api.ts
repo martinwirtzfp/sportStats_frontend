@@ -40,8 +40,8 @@ export const competitionsApi = {
 
 // --- Teams ---
 export const teamsApi = {
-  getAll: (competitionId?: number) =>
-    api.get('/api/teams', { params: competitionId ? { competitionId } : {} }),
+  getAll: (competitionId?: number, season?: string) =>
+    api.get('/api/teams', { params: { ...(competitionId ? { competitionId } : {}), ...(season ? { season } : {}) } }),
   getById: (id: number) => api.get(`/api/teams/${id}`),
 }
 
@@ -55,12 +55,18 @@ export const matchesApi = {
 
 // --- Statistics ---
 export const statisticsApi = {
-  getTeamStats: (teamId: number, lastN = 10) =>
-    api.get(`/api/statistics/teams/${teamId}`, { params: { lastN } }),
-  getRisk: (homeTeamId: number, awayTeamId: number, lastN = 10) =>
-    api.get('/api/risk', { params: { homeTeamId, awayTeamId, lastN } }),
-  getH2H: (team1Id: number, team2Id: number) =>
-    api.get('/api/h2h', { params: { team1Id, team2Id } }),
+  getTeamStats: (teamId: number, lastN = 10, season?: string) =>
+    api.get(`/api/statistics/teams/${teamId}`, { params: { lastN, ...(season ? { season } : {}) } }),
+  getRisk: (homeTeamId: number, awayTeamId: number, lastN = 10, season?: string) =>
+    api.get('/api/risk', { params: { homeTeamId, awayTeamId, lastN, ...(season ? { season } : {}) } }),
+  getH2H: (team1Id: number, team2Id: number, season?: string) =>
+    api.get('/api/h2h', { params: { team1Id, team2Id, ...(season ? { season } : {}) } }),
+}
+
+// --- Ingestion ---
+export const ingestionApi = {
+  ingestLeague: (leagueApiId: number, season: string, competitionName: string) =>
+    api.post(`/api/ingestion/leagues/${leagueApiId}`, null, { params: { season, competitionName } }),
 }
 
 // --- Favorites ---

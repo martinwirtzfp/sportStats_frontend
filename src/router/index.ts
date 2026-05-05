@@ -37,6 +37,10 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/CalculatorTab.vue'),
       },
       {
+        path: 'ingestion',
+        component: () => import('@/views/IngestionTab.vue'),
+      },
+      {
         path: 'profile',
         component: () => import('@/views/ProfileTab.vue'),
       },

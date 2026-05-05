@@ -38,6 +38,15 @@
         Comparar
       </ion-button>
 
+      <!-- Season filter -->
+      <ion-item lines="none" class="ion-margin-top">
+        <ion-label>Temporada</ion-label>
+        <ion-select v-model="selectedSeason" interface="popover">
+          <ion-select-option :value="null">Todas</ion-select-option>
+          <ion-select-option v-for="s in teamsStore.availableSeasons" :key="s" :value="s">{{ s }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
       <!-- H2H Result -->
       <div v-if="h2h">
         <!-- Record card -->
@@ -140,6 +149,7 @@ ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 const teamsStore = useTeamsStore();
 const team1Id = ref<number | null>(null);
 const team2Id = ref<number | null>(null);
+const selectedSeason = ref<string | null>(null);
 const h2h = ref<HeadToHead | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -147,6 +157,9 @@ const error = ref<string | null>(null);
 onMounted(() => {
   if (teamsStore.teams.length === 0) {
     teamsStore.fetchTeams();
+  }
+  if (teamsStore.competitions.length === 0) {
+    teamsStore.fetchCompetitions();
   }
 });
 
@@ -156,7 +169,8 @@ async function compare() {
   error.value = null;
   h2h.value = null;
   try {
-    const { data } = await statisticsApi.getH2H(team1Id.value, team2Id.value);
+    const season = selectedSeason.value ?? undefined;
+    const { data } = await statisticsApi.getH2H(team1Id.value, team2Id.value, season);
     h2h.value = data;
   } catch {
     error.value = 'No se pudieron cargar los datos H2H.';

@@ -18,6 +18,11 @@
           <ion-label>Calculadora</ion-label>
         </ion-tab-button>
 
+        <ion-tab-button tab="ingestion" href="/tabs/ingestion">
+          <ion-icon :icon="cloudDownload" />
+          <ion-label>Importar</ion-label>
+        </ion-tab-button>
+
         <ion-tab-button tab="profile" href="/tabs/profile">
           <ion-icon :icon="person" />
           <ion-label>Perfil</ion-label>
@@ -29,5 +34,5 @@
 
 <script setup lang="ts">
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
-import { football, swapHorizontal, calculator, person } from 'ionicons/icons';
+import { football, swapHorizontal, calculator, person, cloudDownload } from 'ionicons/icons';
 </script>

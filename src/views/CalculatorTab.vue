@@ -35,6 +35,13 @@
               <ion-select-option :value="20">20</ion-select-option>
             </ion-select>
           </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Temporada</ion-label>
+            <ion-select v-model="selectedSeason" interface="popover">
+              <ion-select-option :value="null">Todas</ion-select-option>
+              <ion-select-option v-for="s in teamsStore.availableSeasons" :key="s" :value="s">{{ s }}</ion-select-option>
+            </ion-select>
+          </ion-item>
           <ion-button
             expand="block"
             class="ion-margin-top"
@@ -163,6 +170,7 @@ const teamsStore = useTeamsStore();
 const homeTeamId = ref<number | null>(null);
 const awayTeamId = ref<number | null>(null);
 const lastN = ref(10);
+const selectedSeason = ref<string | null>(null);
 const risk = ref<RiskAnalysis | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -170,6 +178,9 @@ const error = ref<string | null>(null);
 onMounted(() => {
   if (teamsStore.teams.length === 0) {
     teamsStore.fetchTeams();
+  }
+  if (teamsStore.competitions.length === 0) {
+    teamsStore.fetchCompetitions();
   }
 });
 
@@ -179,7 +190,8 @@ async function calculate() {
   error.value = null;
   risk.value = null;
   try {
-    const { data } = await statisticsApi.getRisk(homeTeamId.value, awayTeamId.value, lastN.value);
+    const season = selectedSeason.value ?? undefined;
+    const { data } = await statisticsApi.getRisk(homeTeamId.value, awayTeamId.value, lastN.value, season);
     risk.value = data;
   } catch {
     error.value = 'No se pudieron calcular las probabilidades.';

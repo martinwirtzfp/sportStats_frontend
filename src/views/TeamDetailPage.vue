@@ -40,6 +40,17 @@
           </ion-segment>
         </div>
 
+        <!-- Selector temporada -->
+        <div class="ion-padding-horizontal ion-padding-top">
+          <ion-item lines="none">
+            <ion-label>Temporada</ion-label>
+            <ion-select v-model="selectedSeason" interface="popover" @ionChange="loadAll">
+              <ion-select-option :value="null">Todas</ion-select-option>
+              <ion-select-option v-for="s in teamsStore.availableSeasons" :key="s" :value="s">{{ s }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </div>
+
         <!-- Stats cards -->
         <div v-if="stats">
           <ion-grid class="ion-padding-horizontal">
@@ -134,6 +145,7 @@ import {
   IonBackButton, IonButton, IonIcon, IonSpinner, IonCard, IonCardHeader,
   IonCardTitle, IonCardContent, IonGrid, IonRow, IonCol, IonList,
   IonListHeader, IonItem, IonLabel, IonBadge, IonSegment, IonSegmentButton,
+  IonSelect, IonSelectOption,
 } from '@ionic/vue';
 import { heart, heartOutline } from 'ionicons/icons';
 import { Bar } from 'vue-chartjs';
@@ -141,6 +153,7 @@ import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Lege
 import { teamsApi, matchesApi, statisticsApi } from '@/services/api';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useTeamsStore } from '@/stores/teamsStore';
 import type { Team, Match, TeamStats } from '@/types';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -149,6 +162,7 @@ const route = useRoute();
 const router = useRouter();
 const favStore = useFavoritesStore();
 const authStore = useAuthStore();
+const teamsStore = useTeamsStore();
 
 const teamId = Number(route.params.id);
 const team = ref<Team | null>(null);
@@ -156,18 +170,23 @@ const matches = ref<Match[]>([]);
 const stats = ref<TeamStats | null>(null);
 const loading = ref(true);
 const lastN = ref(10);
+const selectedSeason = ref<string | null>((route.query.season as string) ?? null);
 
 onMounted(async () => {
+  if (teamsStore.competitions.length === 0) {
+    await teamsStore.fetchCompetitions();
+  }
   await loadAll();
 });
 
 async function loadAll() {
   loading.value = true;
   try {
+    const season = selectedSeason.value ?? undefined;
     const [teamRes, matchRes, statsRes] = await Promise.all([
       teamsApi.getById(teamId),
       matchesApi.getLastByTeam(teamId, lastN.value),
-      statisticsApi.getTeamStats(teamId, lastN.value),
+      statisticsApi.getTeamStats(teamId, lastN.value, season),
     ]);
     team.value = teamRes.data;
     matches.value = matchRes.data;
