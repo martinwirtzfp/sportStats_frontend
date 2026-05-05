@@ -31,5 +31,9 @@ export const useFavoritesStore = defineStore('favorites', () => {
     return favorites.value.some((f) => f.teamId === teamId)
   }
 
-  return { favorites, loading, fetch, add, remove, isFavorite }
+  function clear() {
+    favorites.value = []
+  }
+
+  return { favorites, loading, fetch, add, remove, isFavorite, clear }
 })

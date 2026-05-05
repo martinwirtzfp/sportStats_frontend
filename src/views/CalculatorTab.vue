@@ -87,11 +87,11 @@
               <ion-row>
                 <ion-col class="ion-text-center">
                   <p class="stat-label">Más de 2.5</p>
-                  <p class="stat-big blue">{{ pct(risk.overPercentage / 100) }}</p>
+                  <p class="stat-big blue">{{ pct(risk.overPercentage) }}</p>
                 </ion-col>
                 <ion-col class="ion-text-center">
                   <p class="stat-label">Menos de 2.5</p>
-                  <p class="stat-big grey">{{ pct(risk.underPercentage / 100) }}</p>
+                  <p class="stat-big grey">{{ pct(risk.underPercentage) }}</p>
                 </ion-col>
                 <ion-col class="ion-text-center">
                   <p class="stat-label">Media goles</p>
@@ -101,11 +101,11 @@
               <ion-row>
                 <ion-col class="ion-text-center">
                   <p class="stat-label">BTTS Sí</p>
-                  <p class="stat-big green">{{ risk.bttsYesPercentage.toFixed(1) }}%</p>
+                  <p class="stat-big green">{{ risk.bttsYesPercentage.toFixed(2) }}%</p>
                 </ion-col>
                 <ion-col class="ion-text-center">
                   <p class="stat-label">BTTS No</p>
-                  <p class="stat-big red">{{ risk.bttsNoPercentage.toFixed(1) }}%</p>
+                  <p class="stat-big red">{{ risk.bttsNoPercentage.toFixed(2) }}%</p>
                 </ion-col>
               </ion-row>
             </ion-grid>
@@ -189,7 +189,7 @@ async function calculate() {
 }
 
 function pct(value: number) {
-  return `${(value * 100).toFixed(1)}%`;
+  return `${value.toFixed(2)}%`;
 }
 
 const chart1X2Data = computed(() => ({

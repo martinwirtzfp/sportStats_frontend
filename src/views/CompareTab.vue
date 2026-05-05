@@ -75,7 +75,7 @@
                 </ion-col>
                 <ion-col class="ion-text-center">
                   <p class="stat-label">BTTS %</p>
-                  <p class="stat-value">{{ h2h.bttsPercentage.toFixed(1) }}%</p>
+                  <p class="stat-value">{{ h2h.bttsPercentage.toFixed(2) }}%</p>
                 </ion-col>
               </ion-row>
             </ion-grid>

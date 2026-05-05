@@ -96,7 +96,7 @@ onMounted(() => {
 
 function logout() {
   authStore.logout();
-  favStore.favorites = [];
+  favStore.clear();
 }
 
 async function removeFav(teamId: number) {

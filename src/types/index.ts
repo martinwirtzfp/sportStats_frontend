@@ -97,7 +97,8 @@ export interface HeadToHead {
   team1Wins: number
   draws: number
   team2Wins: number
-  goalsAvg: number
+  team1GoalsAvg: number
+  team2GoalsAvg: number
   avgTotalGoals: number
   bttsCount: number
   bttsPercentage: number
