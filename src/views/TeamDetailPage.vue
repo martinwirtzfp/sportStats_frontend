@@ -198,12 +198,12 @@ function formatDate(iso: string) {
 }
 
 function matchResultColor(m: Match) {
-  if (!stats.value) return 'medium';
   const scored = m.homeTeamId === teamId ? m.homeGoals : m.awayGoals;
   const conceded = m.homeTeamId === teamId ? m.awayGoals : m.homeGoals;
-  if (scored > conceded) return 'success';
-  if (scored === conceded) return 'warning';
-  return 'danger';
+  if (scored != null && conceded != null && scored > conceded) return 'success';
+  if (scored != null && conceded != null && scored === conceded) return 'warning';
+  if (scored != null && conceded != null) return 'danger';
+  return 'medium';
 }
 
 function matchResultLabel(m: Match) {
