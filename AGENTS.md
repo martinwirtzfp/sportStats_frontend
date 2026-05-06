@@ -189,7 +189,7 @@ teamsApi.getSeasons(id)          // GET /api/teams/{id}/seasons → List<string>
 matchesApi.getLastByTeam(teamId, lastN = 10)   // lastN=0 devuelve todos los partidos
 
 statisticsApi.getTeamStats(teamId, lastN = 10, season?)  // lastN=0 = todos
-statisticsApi.getRisk(homeTeamId, awayTeamId, lastN = 10)
+statisticsApi.getRisk(homeTeamId, awayTeamId)                   // usa todos los datos hist&#243;ricos, ponderados por recencia
 statisticsApi.getH2H(team1Id, team2Id)
 
 favoritesApi.getAll()
@@ -268,9 +268,9 @@ La función `pct(value)` en `CalculatorTab.vue` está implementada correctamente
 - No tiene `meta: { requiresAuth: true }` en el router.
 
 ### CalculatorTab.vue
-- Misma lógica de liga/temporada/equipos que `CompareTab.vue`.
-- Además tiene selector de `lastN` (5/10/15/20 partidos para el cálculo de riesgo).
-- Muestra nombre de liga y temporada en la tarjeta de configuración.
+- Tiene selector de **liga** (`selectedLeagueApiId`). No hay selector de temporada — se usan todos los datos históricos del equipo.
+- `availableTeams`: cargado localmente vía `teamsApi.getAll(compId, season)` iterando sobre todas las competiciones de esa liga y fusionando equipos (dedup por `team.id`).
+- Cuando cambia la liga: resetea equipo 1/2 y resultados, recarga `availableTeams`.
 - No tiene `meta: { requiresAuth: true }` en el router.
 
 ### ProfileTab.vue

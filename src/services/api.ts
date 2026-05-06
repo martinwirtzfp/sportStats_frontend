@@ -66,8 +66,8 @@ export const matchesApi = {
 export const statisticsApi = {
   getTeamStats: (teamId: number, lastN = 10, season?: string) =>
     api.get(`/api/statistics/teams/${teamId}`, { params: { lastN, ...(season ? { season } : {}) } }),
-  getRisk: (homeTeamId: number, awayTeamId: number, lastN = 10, season?: string) =>
-    api.get('/api/risk', { params: { homeTeamId, awayTeamId, lastN, ...(season ? { season } : {}) } }),
+  getRisk: (homeTeamId: number, awayTeamId: number) =>
+    api.get('/api/risk', { params: { homeTeamId, awayTeamId } }),
   getH2H: (team1Id: number, team2Id: number, season?: string) =>
     api.get('/api/h2h', { params: { team1Id, team2Id, ...(season ? { season } : {}) } }),
 }

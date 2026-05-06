@@ -18,13 +18,6 @@
               </ion-select-option>
             </ion-select>
           </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Temporada</ion-label>
-            <ion-select v-model="selectedSeason" interface="popover" :disabled="!selectedLeagueApiId">
-              <ion-select-option :value="null">Todas</ion-select-option>
-              <ion-select-option v-for="s in seasonsForLeague" :key="s" :value="s">{{ s }}</ion-select-option>
-            </ion-select>
-          </ion-item>
           <div v-if="loadingTeams" class="ion-padding ion-text-center">
             <ion-spinner name="crescent" color="primary"></ion-spinner>
           </div>
@@ -176,7 +169,6 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const teamsStore = useTeamsStore();
 
 const selectedLeagueApiId = ref<number | null>(null);
-const selectedSeason = ref<string | null>(null);
 const availableTeams = ref<Team[]>([]);
 const loadingTeams = ref(false);
 
@@ -194,44 +186,13 @@ const uniqueLeagues = computed(() => {
   return [...byApiId.values()].sort((a, b) => a.name.localeCompare(b.name));
 });
 
-const seasonsForLeague = computed(() =>
-  teamsStore.competitions
-    .filter(c => c.apiId === selectedLeagueApiId.value)
-    .map(c => c.season)
-    .filter(Boolean)
-    .sort()
-    .reverse()
-);
-
 watch(selectedLeagueApiId, (apiId) => {
   homeTeamId.value = null;
   awayTeamId.value = null;
   risk.value = null;
   availableTeams.value = [];
-  if (!apiId) {
-    selectedSeason.value = null;
-    return;
-  }
-  const seasons = teamsStore.competitions
-    .filter(c => c.apiId === apiId)
-    .map(c => c.season)
-    .sort()
-    .reverse();
-  const latestSeason = seasons[0] ?? null;
-  if (selectedSeason.value === latestSeason) {
-    loadTeams();
-  } else {
-    selectedSeason.value = latestSeason;
-  }
-});
-
-watch(selectedSeason, () => {
-  if (selectedLeagueApiId.value) {
-    homeTeamId.value = null;
-    awayTeamId.value = null;
-    risk.value = null;
-    loadTeams();
-  }
+  if (!apiId) return;
+  loadTeams();
 });
 
 async function loadTeams() {
@@ -239,24 +200,14 @@ async function loadTeams() {
   loadingTeams.value = true;
   try {
     const leagueComps = teamsStore.competitions.filter(c => c.apiId === selectedLeagueApiId.value);
-    if (!selectedSeason.value) {
-      const allTeams = new Map<number, Team>();
-      for (const comp of leagueComps) {
-        try {
-          const { data } = await teamsApi.getAll(comp.id, comp.season);
-          if (data) for (const t of data) allTeams.set(t.id, t);
-        } catch { /* ignorar errores individuales */ }
-      }
-      availableTeams.value = [...allTeams.values()].sort((a, b) => a.name.localeCompare(b.name));
-    } else {
-      const comp = leagueComps.find(c => c.season === selectedSeason.value);
-      if (!comp) {
-        availableTeams.value = [];
-      } else {
-        const { data } = await teamsApi.getAll(comp.id, selectedSeason.value!);
-        availableTeams.value = data ?? [];
-      }
+    const allTeams = new Map<number, Team>();
+    for (const comp of leagueComps) {
+      try {
+        const { data } = await teamsApi.getAll(comp.id, comp.season);
+        if (data) for (const t of data) allTeams.set(t.id, t);
+      } catch { /* ignorar errores individuales */ }
     }
+    availableTeams.value = [...allTeams.values()].sort((a, b) => a.name.localeCompare(b.name));
   } catch {
     availableTeams.value = [];
   } finally {
@@ -279,8 +230,7 @@ async function calculate() {
   error.value = null;
   risk.value = null;
   try {
-    const season = selectedSeason.value ?? undefined;
-    const { data } = await statisticsApi.getRisk(homeTeamId.value, awayTeamId.value, 0, season);
+    const { data } = await statisticsApi.getRisk(homeTeamId.value, awayTeamId.value);
     risk.value = data;
   } catch {
     error.value = 'No se pudieron calcular las probabilidades.';
