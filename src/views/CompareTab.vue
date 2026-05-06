@@ -64,8 +64,10 @@
         </ion-card-content>
       </ion-card>
 
-      <!-- Resultado H2H -->
-      <div v-if="h2h">
+      <!-- Resultados H2H -->
+      <template v-if="h2h">
+
+        <!-- 1. Marcador principal -->
         <ion-card>
           <ion-card-header>
             <ion-card-title class="ion-text-center">Historial de enfrentamientos</ion-card-title>
@@ -76,49 +78,129 @@
                 <p class="team-name">{{ h2h.team1Name }}</p>
                 <p class="big-number">{{ h2h.team1Wins }}</p>
                 <p class="label">Victorias</p>
+                <p class="sub-stat">{{ h2h.team1GoalsAvg.toFixed(2) }} goles/p</p>
               </div>
               <div class="team-col center">
                 <p class="big-number draws">{{ h2h.draws }}</p>
                 <p class="label">Empates</p>
+                <p class="sub-stat">{{ h2h.totalMatches }} partidos</p>
               </div>
               <div class="team-col">
                 <p class="team-name">{{ h2h.team2Name }}</p>
                 <p class="big-number">{{ h2h.team2Wins }}</p>
                 <p class="label">Victorias</p>
+                <p class="sub-stat">{{ h2h.team2GoalsAvg.toFixed(2) }} goles/p</p>
               </div>
             </div>
+          </ion-card-content>
+        </ion-card>
 
+        <!-- 2. Goles -->
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Goles</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
             <ion-grid>
               <ion-row>
                 <ion-col class="ion-text-center">
-                  <p class="stat-label">Partidos totales</p>
-                  <p class="stat-value">{{ h2h.totalMatches }}</p>
-                </ion-col>
-                <ion-col class="ion-text-center">
-                  <p class="stat-label">Media goles/partido</p>
+                  <p class="stat-label">Media goles/p</p>
                   <p class="stat-value">{{ h2h.avgTotalGoals.toFixed(2) }}</p>
                 </ion-col>
                 <ion-col class="ion-text-center">
-                  <p class="stat-label">BTTS %</p>
-                  <p class="stat-value">{{ h2h.bttsPercentage.toFixed(2) }}%</p>
+                  <p class="stat-label">Mas de 2.5</p>
+                  <p class="stat-value blue">{{ h2h.overPercentage.toFixed(1) }}%</p>
+                </ion-col>
+                <ion-col class="ion-text-center">
+                  <p class="stat-label">Menos de 2.5</p>
+                  <p class="stat-value grey">{{ h2h.underPercentage.toFixed(1) }}%</p>
+                </ion-col>
+              </ion-row>
+              <ion-row class="ion-margin-top">
+                <ion-col class="ion-text-center">
+                  <p class="stat-label">BTTS Si</p>
+                  <p class="stat-value green">{{ h2h.bttsPercentage.toFixed(1) }}%</p>
+                </ion-col>
+                <ion-col class="ion-text-center">
+                  <p class="stat-label">BTTS No</p>
+                  <p class="stat-value red">{{ (100 - h2h.bttsPercentage).toFixed(1) }}%</p>
+                </ion-col>
+                <ion-col class="ion-text-center">
+                  <p class="stat-label">Resultado mas repetido</p>
+                  <p class="stat-value">{{ h2h.mostCommonScore }}</p>
+                  <p class="stat-sub">({{ h2h.mostCommonScoreCount }} veces)</p>
                 </ion-col>
               </ion-row>
             </ion-grid>
           </ion-card-content>
         </ion-card>
 
+        <!-- 3. Porterias a cero -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>Distribución de resultados</ion-card-title>
+            <ion-card-title>Porterias a cero en H2H</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="h2h-scoreboard">
+              <div class="team-col">
+                <p class="team-name">{{ h2h.team1Name }}</p>
+                <p class="big-number">{{ h2h.team1CleanSheets }}</p>
+                <p class="label">veces</p>
+                <p class="stat-sub">{{ h2h.totalMatches > 0 ? ((h2h.team1CleanSheets / h2h.totalMatches) * 100).toFixed(0) : 0 }}% de partidos</p>
+              </div>
+              <div class="team-col center"></div>
+              <div class="team-col">
+                <p class="team-name">{{ h2h.team2Name }}</p>
+                <p class="big-number">{{ h2h.team2CleanSheets }}</p>
+                <p class="label">veces</p>
+                <p class="stat-sub">{{ h2h.totalMatches > 0 ? ((h2h.team2CleanSheets / h2h.totalMatches) * 100).toFixed(0) : 0 }}% de partidos</p>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- 4. Resultado al descanso -->
+        <ion-card v-if="h2h.htMatchesWithData > 0">
+          <ion-card-header>
+            <ion-card-title>Resultado al descanso</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="h2h-scoreboard">
+              <div class="team-col">
+                <p class="team-name">{{ h2h.team1Name }}</p>
+                <p class="big-number">{{ h2h.htTeam1Wins }}</p>
+                <p class="label">Ganando</p>
+                <p class="stat-sub">{{ h2h.htMatchesWithData > 0 ? ((h2h.htTeam1Wins / h2h.htMatchesWithData) * 100).toFixed(0) : 0 }}%</p>
+              </div>
+              <div class="team-col center">
+                <p class="big-number draws">{{ h2h.htDraws }}</p>
+                <p class="label">Igualados</p>
+                <p class="stat-sub">{{ h2h.htMatchesWithData > 0 ? ((h2h.htDraws / h2h.htMatchesWithData) * 100).toFixed(0) : 0 }}%</p>
+              </div>
+              <div class="team-col">
+                <p class="team-name">{{ h2h.team2Name }}</p>
+                <p class="big-number">{{ h2h.htTeam2Wins }}</p>
+                <p class="label">Ganando</p>
+                <p class="stat-sub">{{ h2h.htMatchesWithData > 0 ? ((h2h.htTeam2Wins / h2h.htMatchesWithData) * 100).toFixed(0) : 0 }}%</p>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- 5. Distribucion de victorias -->
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Distribucion de victorias</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <Bar :data="chartData" :options="chartOptions" style="max-height: 220px" />
           </ion-card-content>
         </ion-card>
 
+        <!-- 6. Ultimos enfrentamientos -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>Últimos enfrentamientos</ion-card-title>
+            <ion-card-title>Ultimos enfrentamientos</ion-card-title>
           </ion-card-header>
           <ion-card-content class="ion-no-padding">
             <ion-list lines="full">
@@ -126,16 +208,20 @@
                 <ion-label>
                   <div class="match-row">
                     <span class="match-team">{{ m.homeTeamName }}</span>
-                    <span class="match-score">{{ m.homeGoals }} – {{ m.awayGoals }}</span>
+                    <span class="match-score">{{ m.homeGoals }} - {{ m.awayGoals }}</span>
                     <span class="match-team right">{{ m.awayTeamName }}</span>
                   </div>
-                  <p class="match-date">{{ formatDate(m.matchDate) }}</p>
+                  <p class="match-meta">
+                    <span>{{ formatDate(m.matchDate) }}</span>
+                    <span v-if="m.htHomeGoals != null" class="ht-score">(HT: {{ m.htHomeGoals }}-{{ m.htAwayGoals }})</span>
+                  </p>
                 </ion-label>
               </ion-item>
             </ion-list>
           </ion-card-content>
         </ion-card>
-      </div>
+
+      </template>
 
       <div v-if="error" class="ion-padding ion-text-center">
         <ion-text color="danger">{{ error }}</ion-text>
@@ -276,16 +362,24 @@ async function compare() {
   }
 }
 
-const chartData = computed(() => ({
-  labels: [h2h.value?.team1Name ?? 'Equipo 1', 'Empates', h2h.value?.team2Name ?? 'Equipo 2'],
-  datasets: [
-    {
-      label: 'Partidos',
-      data: [h2h.value?.team1Wins ?? 0, h2h.value?.draws ?? 0, h2h.value?.team2Wins ?? 0],
-      backgroundColor: ['#3880ff', '#999999', '#eb445a'],
-    },
-  ],
-}));
+const chartData = computed(() => {
+  const total = h2h.value?.totalMatches ?? 0;
+  const pct = (n: number) => total > 0 ? `${((n / total) * 100).toFixed(0)}%` : '0%';
+  return {
+    labels: [
+      [h2h.value?.team1Name ?? 'Equipo 1', pct(h2h.value?.team1Wins ?? 0)],
+      ['Empates', pct(h2h.value?.draws ?? 0)],
+      [h2h.value?.team2Name ?? 'Equipo 2', pct(h2h.value?.team2Wins ?? 0)],
+    ],
+    datasets: [
+      {
+        label: 'Partidos',
+        data: [h2h.value?.team1Wins ?? 0, h2h.value?.draws ?? 0, h2h.value?.team2Wins ?? 0],
+        backgroundColor: ['#3880ff', '#999999', '#eb445a'],
+      },
+    ],
+  };
+});
 
 const chartOptions = {
   responsive: true,
@@ -302,18 +396,26 @@ function formatDate(iso: string) {
   display: flex;
   justify-content: space-around;
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .team-col { flex: 1; }
 .team-name { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
 .big-number { font-size: 2rem; font-weight: 700; margin: 0; }
 .big-number.draws { color: var(--ion-color-medium); }
 .label { font-size: 0.75rem; color: var(--ion-color-medium); margin: 0; }
+.team-col.center .label { margin-top: 18px; }
+.sub-stat { font-size: 0.75rem; color: var(--ion-color-medium); margin: 4px 0 0; }
 .stat-label { font-size: 0.75rem; color: var(--ion-color-medium); margin: 0; }
 .stat-value { font-size: 1.2rem; font-weight: 600; margin: 2px 0 0; }
+.stat-value.blue { color: #3880ff; }
+.stat-value.grey { color: #999; }
+.stat-value.green { color: #2dd36f; }
+.stat-value.red { color: #eb445a; }
+.stat-sub { font-size: 0.7rem; color: var(--ion-color-medium); margin: 0; }
 .match-row { display: flex; align-items: center; gap: 8px; }
 .match-team { flex: 1; font-size: 0.85rem; }
 .match-team.right { text-align: right; }
 .match-score { font-weight: 700; white-space: nowrap; }
-.match-date { font-size: 0.75rem; color: var(--ion-color-medium); margin: 2px 0 0; }
+.match-meta { display: flex; gap: 8px; font-size: 0.75rem; color: var(--ion-color-medium); margin: 2px 0 0; }
+.ht-score { color: var(--ion-color-medium); }
 </style>

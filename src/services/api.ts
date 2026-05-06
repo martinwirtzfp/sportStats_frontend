@@ -60,8 +60,6 @@ export const teamsApi = {
 export const matchesApi = {
   getLastByTeam: (teamId: number, lastN = 10) =>
     api.get(`/api/matches/teams/${teamId}`, { params: { lastN } }),
-  getH2H: (team1Id: number, team2Id: number) =>
-    api.get('/api/matches/h2h', { params: { team1Id, team2Id } }),
 }
 
 // --- Statistics ---
@@ -86,5 +84,3 @@ export const favoritesApi = {
   add: (teamId: number) => api.post(`/api/users/me/favorites/${teamId}`),
   remove: (teamId: number) => api.delete(`/api/users/me/favorites/${teamId}`),
 }
-
-export default api

@@ -102,6 +102,21 @@ export interface HeadToHead {
   avgTotalGoals: number
   bttsCount: number
   bttsPercentage: number
+  // Over/Under 2.5
+  overCount: number
+  overPercentage: number
+  underPercentage: number
+  // Half-time results
+  htTeam1Wins: number
+  htDraws: number
+  htTeam2Wins: number
+  htMatchesWithData: number
+  // Clean sheets in H2H
+  team1CleanSheets: number
+  team2CleanSheets: number
+  // Most repeated exact score
+  mostCommonScore: string
+  mostCommonScoreCount: number
   recentMatches: Match[]
 }
 

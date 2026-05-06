@@ -148,13 +148,12 @@ Clave localStorage: `sportstats_token`, `sportstats_user`.
 // State
 teams: Team[]
 competitions: Competition[]
-selectedCompetitionId: number | null
 loading: boolean
 
 // Actions
 fetchCompetitions()                    // GET /api/competitions
-fetchTeams(competitionId?: number)     // GET /api/teams?competitionId=X
-selectCompetition(id)                  // actualiza selectedCompetitionId + llama fetchTeams
+fetchTeamsBySeason(competitionId, season) // GET /api/teams?competitionId=X&season=Y
+clearTeams()                           // vacía el array local de equipos
 ```
 
 ### favoritesStore (`src/stores/favoritesStore.ts`)
@@ -188,7 +187,6 @@ teamsApi.getById(id)
 teamsApi.getSeasons(id)          // GET /api/teams/{id}/seasons → List<string> de temporadas con datos
 
 matchesApi.getLastByTeam(teamId, lastN = 10)   // lastN=0 devuelve todos los partidos
-matchesApi.getH2H(team1Id, team2Id)
 
 statisticsApi.getTeamStats(teamId, lastN = 10, season?)  // lastN=0 = todos
 statisticsApi.getRisk(homeTeamId, awayTeamId, lastN = 10)
@@ -220,7 +218,11 @@ RiskAnalysis   { homeTeamId, homeTeamName, awayTeamId, awayTeamName, lastN,
                  bttsYesPercentage, bttsNoPercentage, halfTimeProbability }
 HeadToHead     { team1Id, team1Name, team2Id, team2Name, totalMatches,
                  team1Wins, draws, team2Wins, team1GoalsAvg, team2GoalsAvg,
-                 avgTotalGoals, bttsCount, bttsPercentage, recentMatches }
+                 avgTotalGoals, bttsCount, bttsPercentage,
+                 overCount, overPercentage, underPercentage,
+                 htTeam1Wins, htDraws, htTeam2Wins, htMatchesWithData,
+                 team1CleanSheets, team2CleanSheets,
+                 mostCommonScore, mostCommonScoreCount, recentMatches }
 UserFavorite   { id, teamId, teamName, teamLogo }
 ```
 
@@ -308,6 +310,12 @@ Cada componente registra sus propios elementos de Chart.js con `ChartJS.register
 | `TeamDetailPage.vue` | `matchResultColor` devolvía `'medium'` si no había stats | Eliminada esa dependencia |
 | `types/index.ts` | `HeadToHead.goalsAvg` no existe en backend (son `team1GoalsAvg`/`team2GoalsAvg`) | Corregida la interfaz |
 | `CompareTab.vue` / `CalculatorTab.vue` | Mostraban todos los equipos de `teamsStore.teams` sin filtrar por liga ni temporada | Gestión propia de liga+temporada+equipos en cada componente |
+| `CompareTab.vue` | Spacer invisible (`.team-name-spacer`) en columna central de scoreboards igualaba alturas pero hacía el número central demasiado bajo | Spacer eliminado, añadido `margin-top: 18px` en `.team-col.center .label` para re-alinear las etiquetas manteniendo el número central más alto |
+| `CompareTab.vue` | Nota "Muestra de X partidos con datos de descanso" bajo el scoreboard HT | Eliminada (innecesaria) |
+| `src/views/Tab1Page.vue`, `Tab2Page.vue`, `Tab3Page.vue`, `src/components/ExploreContainer.vue`, `tests/unit/example.spec.ts` | Scaffolding inicial de Ionic nunca usado — ni en el router ni en vistas reales | Archivos eliminados |
+| `src/services/api.ts` — `matchesApi.getH2H` | Definida pero nunca importada/llamada desde ninguna vista | Eliminada |
+| `src/services/api.ts` — `export default api` | Instancia axios exportada como default pero nunca importada | Eliminado |
+| `src/stores/teamsStore.ts` — `selectedCompetitionId`, `availableSeasons`, `fetchTeams`, `selectCompetition` | Exportados pero nunca consumidos desde ningún componente | Eliminados del store |
 
 ---
 
