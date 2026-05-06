@@ -43,6 +43,7 @@ export const teamsApi = {
   getAll: (competitionId?: number, season?: string) =>
     api.get('/api/teams', { params: { ...(competitionId ? { competitionId } : {}), ...(season ? { season } : {}) } }),
   getById: (id: number) => api.get(`/api/teams/${id}`),
+  getSeasons: (id: number) => api.get<string[]>(`/api/teams/${id}/seasons`),
 }
 
 // --- Matches ---

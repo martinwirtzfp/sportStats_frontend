@@ -183,13 +183,14 @@ authApi.login(email, password)
 authApi.register(username, email, password)
 
 competitionsApi.getAll()
-teamsApi.getAll(competitionId?)
+teamsApi.getAll(competitionId?, season?)
 teamsApi.getById(id)
+teamsApi.getSeasons(id)          // GET /api/teams/{id}/seasons → List<string> de temporadas con datos
 
-matchesApi.getLastByTeam(teamId, lastN = 10)
+matchesApi.getLastByTeam(teamId, lastN = 10)   // lastN=0 devuelve todos los partidos
 matchesApi.getH2H(team1Id, team2Id)
 
-statisticsApi.getTeamStats(teamId, lastN = 10)
+statisticsApi.getTeamStats(teamId, lastN = 10, season?)  // lastN=0 = todos
 statisticsApi.getRisk(homeTeamId, awayTeamId, lastN = 10)
 statisticsApi.getH2H(team1Id, team2Id)
 
@@ -250,13 +251,25 @@ La función `pct(value)` en `CalculatorTab.vue` está implementada correctamente
 
 ### TeamDetailPage.vue
 - Parámetro de ruta: `:id` → `Number(route.params.id)`
-- Carga paralela: `Promise.all([getById, getLastByTeam, getTeamStats])`
-- Selector de N partidos: `ion-segment` con valores 5/10/15 → recarga todo
+- Carga paralela en `onMounted`: `Promise.all([loadAll(), teamsApi.getSeasons(teamId)])`
+- `teamSeasons`: temporadas disponibles para este equipo específico (cargadas desde `/api/teams/{id}/seasons`). Solo muestra temporadas con datos reales para ese equipo.
+- Selector de N partidos: `ion-segment` con valores 5/10/**0** (0 = "Todos" = sin límite). El backend maneja `lastN=0` como "todos los partidos".
 - `matchResultColor(m)` y `matchResultLabel(m)`: calculan V/E/D directamente de los goles (no dependen de `stats`)
 
-### CompareTab.vue / CalculatorTab.vue
-- Ambas llaman `teamsStore.fetchTeams()` en `onMounted` si la lista está vacía
-- No tienen header con `ion-back-button` (son tabs, no necesitan)
+### CompareTab.vue
+- Tiene selector de **liga** (`selectedLeagueApiId`) + selector de **temporada** (`selectedSeason`) ligado a esa liga.
+- Las temporadas disponibles se calculan de `teamsStore.competitions` filtrando por `apiId` de la liga seleccionada.
+- `availableTeams`: cargado localmente vía `teamsApi.getAll(compId, season)`. Para temporada "Todas", itera sobre todas las competiciones de esa liga y fusiona equipos (dedup por `team.id`).
+- Cuando cambia la liga: auto-selecciona la última temporada disponible, resetea equipo 1/2 y resultados.
+- Cuando cambia la temporada: resetea equipo 1/2 y resultados, recarga `availableTeams`.
+- Muestra nombre de liga y temporada en una tarjeta en la cabecera del contenido.
+- No tiene `meta: { requiresAuth: true }` en el router.
+
+### CalculatorTab.vue
+- Misma lógica de liga/temporada/equipos que `CompareTab.vue`.
+- Además tiene selector de `lastN` (5/10/15/20 partidos para el cálculo de riesgo).
+- Muestra nombre de liga y temporada en la tarjeta de configuración.
+- No tiene `meta: { requiresAuth: true }` en el router.
 
 ### ProfileTab.vue
 - **No** tiene `meta: { requiresAuth: true }` en el router
@@ -294,6 +307,7 @@ Cada componente registra sus propios elementos de Chart.js con `ChartJS.register
 | `CompareTab.vue` | `bttsPercentage.toFixed(1)` — solo 1 decimal | Cambiado a `.toFixed(2)` |
 | `TeamDetailPage.vue` | `matchResultColor` devolvía `'medium'` si no había stats | Eliminada esa dependencia |
 | `types/index.ts` | `HeadToHead.goalsAvg` no existe en backend (son `team1GoalsAvg`/`team2GoalsAvg`) | Corregida la interfaz |
+| `CompareTab.vue` / `CalculatorTab.vue` | Mostraban todos los equipos de `teamsStore.teams` sin filtrar por liga ni temporada | Gestión propia de liga+temporada+equipos en cada componente |
 
 ---
 

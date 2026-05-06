@@ -36,7 +36,7 @@
           <ion-segment :value="String(lastN)" @ionChange="onLastNChange">
             <ion-segment-button value="5"><ion-label>Últ. 5</ion-label></ion-segment-button>
             <ion-segment-button value="10"><ion-label>Últ. 10</ion-label></ion-segment-button>
-            <ion-segment-button value="15"><ion-label>Últ. 15</ion-label></ion-segment-button>
+            <ion-segment-button value="0"><ion-label>Todos</ion-label></ion-segment-button>
           </ion-segment>
         </div>
 
@@ -46,7 +46,7 @@
             <ion-label>Temporada</ion-label>
             <ion-select v-model="selectedSeason" interface="popover" @ionChange="loadAll">
               <ion-select-option :value="null">Todas</ion-select-option>
-              <ion-select-option v-for="s in teamsStore.availableSeasons" :key="s" :value="s">{{ s }}</ion-select-option>
+              <ion-select-option v-for="s in teamSeasons" :key="s" :value="s">{{ s }}</ion-select-option>
             </ion-select>
           </ion-item>
         </div>
@@ -153,7 +153,6 @@ import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Lege
 import { teamsApi, matchesApi, statisticsApi } from '@/services/api';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useTeamsStore } from '@/stores/teamsStore';
 import type { Team, Match, TeamStats } from '@/types';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -162,7 +161,6 @@ const route = useRoute();
 const router = useRouter();
 const favStore = useFavoritesStore();
 const authStore = useAuthStore();
-const teamsStore = useTeamsStore();
 
 const teamId = Number(route.params.id);
 const team = ref<Team | null>(null);
@@ -171,12 +169,14 @@ const stats = ref<TeamStats | null>(null);
 const loading = ref(true);
 const lastN = ref(10);
 const selectedSeason = ref<string | null>((route.query.season as string) ?? null);
+const teamSeasons = ref<string[]>([]);
 
 onMounted(async () => {
-  if (teamsStore.competitions.length === 0) {
-    await teamsStore.fetchCompetitions();
-  }
-  await loadAll();
+  const [, seasonsRes] = await Promise.all([
+    loadAll(),
+    teamsApi.getSeasons(teamId),
+  ]);
+  teamSeasons.value = (seasonsRes.data as string[]) ?? [];
 });
 
 async function loadAll() {

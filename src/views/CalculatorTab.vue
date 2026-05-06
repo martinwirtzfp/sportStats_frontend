@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <ion-page>
     <ion-header>
       <ion-toolbar color="primary">
@@ -7,54 +7,76 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- Team selectors -->
+      <!-- Configuración -->
       <ion-card>
+        <ion-card-header>
+          <ion-card-subtitle>Competición</ion-card-subtitle>
+          <ion-card-title>{{ selectedLeagueName || 'Selecciona una liga' }}</ion-card-title>
+          <ion-card-subtitle v-if="selectedSeason">Temporada {{ selectedSeason }}</ion-card-subtitle>
+          <ion-card-subtitle v-else-if="selectedLeagueApiId">Todas las temporadas</ion-card-subtitle>
+        </ion-card-header>
         <ion-card-content>
           <ion-item>
-            <ion-label position="stacked">Equipo local</ion-label>
-            <ion-select v-model="homeTeamId" placeholder="Seleccionar" interface="action-sheet">
-              <ion-select-option v-for="t in teamsStore.teams" :key="t.id" :value="t.id">
-                {{ t.name }}
+            <ion-label position="stacked">Liga</ion-label>
+            <ion-select v-model="selectedLeagueApiId" interface="action-sheet" placeholder="Seleccionar liga">
+              <ion-select-option v-for="l in uniqueLeagues" :key="l.apiId" :value="l.apiId">
+                {{ l.name }}
               </ion-select-option>
-            </ion-select>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Equipo visitante</ion-label>
-            <ion-select v-model="awayTeamId" placeholder="Seleccionar" interface="action-sheet">
-              <ion-select-option v-for="t in teamsStore.teams" :key="t.id" :value="t.id">
-                {{ t.name }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Últimos N partidos</ion-label>
-            <ion-select v-model="lastN" interface="popover">
-              <ion-select-option :value="5">5</ion-select-option>
-              <ion-select-option :value="10">10</ion-select-option>
-              <ion-select-option :value="15">15</ion-select-option>
-              <ion-select-option :value="20">20</ion-select-option>
             </ion-select>
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Temporada</ion-label>
-            <ion-select v-model="selectedSeason" interface="popover">
+            <ion-select v-model="selectedSeason" interface="popover" :disabled="!selectedLeagueApiId">
               <ion-select-option :value="null">Todas</ion-select-option>
-              <ion-select-option v-for="s in teamsStore.availableSeasons" :key="s" :value="s">{{ s }}</ion-select-option>
+              <ion-select-option v-for="s in seasonsForLeague" :key="s" :value="s">{{ s }}</ion-select-option>
             </ion-select>
           </ion-item>
-          <ion-button
-            expand="block"
-            class="ion-margin-top"
-            :disabled="!homeTeamId || !awayTeamId || loading"
-            @click="calculate"
-          >
-            <ion-spinner v-if="loading" name="crescent" slot="start"></ion-spinner>
-            Calcular
-          </ion-button>
+          <div v-if="loadingTeams" class="ion-padding ion-text-center">
+            <ion-spinner name="crescent" color="primary"></ion-spinner>
+          </div>
+          <template v-else-if="selectedLeagueApiId">
+            <ion-item>
+              <ion-label position="stacked">Equipo local</ion-label>
+              <ion-select v-model="homeTeamId" placeholder="Seleccionar" interface="action-sheet">
+                <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
+                  {{ t.name }}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Equipo visitante</ion-label>
+              <ion-select v-model="awayTeamId" placeholder="Seleccionar" interface="action-sheet">
+                <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
+                  {{ t.name }}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Últimos N partidos</ion-label>
+              <ion-select v-model="lastN" interface="popover">
+                <ion-select-option :value="5">5</ion-select-option>
+                <ion-select-option :value="10">10</ion-select-option>
+                <ion-select-option :value="15">15</ion-select-option>
+                <ion-select-option :value="20">20</ion-select-option>
+              </ion-select>
+            </ion-item>
+            <ion-button
+              expand="block"
+              class="ion-margin-top"
+              :disabled="!homeTeamId || !awayTeamId || loading"
+              @click="calculate"
+            >
+              <ion-spinner v-if="loading" name="crescent" slot="start"></ion-spinner>
+              Calcular
+            </ion-button>
+          </template>
+          <div v-else class="ion-padding-top">
+            <p>Selecciona una liga para continuar.</p>
+          </div>
         </ion-card-content>
       </ion-card>
 
-      <!-- Results -->
+      <!-- Resultados -->
       <div v-if="risk">
         <!-- 1X2 -->
         <ion-card>
@@ -151,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
@@ -160,27 +182,114 @@ import {
 } from '@ionic/vue';
 import { Doughnut } from 'vue-chartjs';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { statisticsApi } from '@/services/api';
+import { statisticsApi, teamsApi } from '@/services/api';
 import { useTeamsStore } from '@/stores/teamsStore';
-import type { RiskAnalysis } from '@/types';
+import type { RiskAnalysis, Team } from '@/types';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const teamsStore = useTeamsStore();
+
+const selectedLeagueApiId = ref<number | null>(null);
+const selectedSeason = ref<string | null>(null);
+const availableTeams = ref<Team[]>([]);
+const loadingTeams = ref(false);
+
 const homeTeamId = ref<number | null>(null);
 const awayTeamId = ref<number | null>(null);
 const lastN = ref(10);
-const selectedSeason = ref<string | null>(null);
 const risk = ref<RiskAnalysis | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-onMounted(() => {
-  if (teamsStore.teams.length === 0) {
-    teamsStore.fetchTeams();
+const uniqueLeagues = computed(() => {
+  const byApiId = new Map<number, typeof teamsStore.competitions[0]>();
+  for (const c of teamsStore.competitions) {
+    byApiId.set(c.apiId, c);
   }
+  return [...byApiId.values()].sort((a, b) => a.name.localeCompare(b.name));
+});
+
+const selectedLeagueName = computed(() =>
+  uniqueLeagues.value.find(l => l.apiId === selectedLeagueApiId.value)?.name ?? ''
+);
+
+const seasonsForLeague = computed(() =>
+  teamsStore.competitions
+    .filter(c => c.apiId === selectedLeagueApiId.value)
+    .map(c => c.season)
+    .filter(Boolean)
+    .sort()
+    .reverse()
+);
+
+watch(selectedLeagueApiId, (apiId) => {
+  homeTeamId.value = null;
+  awayTeamId.value = null;
+  risk.value = null;
+  availableTeams.value = [];
+  if (!apiId) {
+    selectedSeason.value = null;
+    return;
+  }
+  const seasons = teamsStore.competitions
+    .filter(c => c.apiId === apiId)
+    .map(c => c.season)
+    .sort()
+    .reverse();
+  const latestSeason = seasons[0] ?? null;
+  if (selectedSeason.value === latestSeason) {
+    loadTeams();
+  } else {
+    selectedSeason.value = latestSeason;
+  }
+});
+
+watch(selectedSeason, () => {
+  if (selectedLeagueApiId.value) {
+    homeTeamId.value = null;
+    awayTeamId.value = null;
+    risk.value = null;
+    loadTeams();
+  }
+});
+
+async function loadTeams() {
+  if (!selectedLeagueApiId.value) return;
+  loadingTeams.value = true;
+  try {
+    const leagueComps = teamsStore.competitions.filter(c => c.apiId === selectedLeagueApiId.value);
+    if (!selectedSeason.value) {
+      const allTeams = new Map<number, Team>();
+      for (const comp of leagueComps) {
+        try {
+          const { data } = await teamsApi.getAll(comp.id, comp.season);
+          if (data) for (const t of data) allTeams.set(t.id, t);
+        } catch { /* ignorar errores individuales */ }
+      }
+      availableTeams.value = [...allTeams.values()].sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      const comp = leagueComps.find(c => c.season === selectedSeason.value);
+      if (!comp) {
+        availableTeams.value = [];
+      } else {
+        const { data } = await teamsApi.getAll(comp.id, selectedSeason.value!);
+        availableTeams.value = data ?? [];
+      }
+    }
+  } catch {
+    availableTeams.value = [];
+  } finally {
+    loadingTeams.value = false;
+  }
+}
+
+onMounted(async () => {
   if (teamsStore.competitions.length === 0) {
-    teamsStore.fetchCompetitions();
+    await teamsStore.fetchCompetitions();
+  }
+  if (uniqueLeagues.value.length > 0) {
+    selectedLeagueApiId.value = uniqueLeagues.value[0].apiId;
   }
 });
 
