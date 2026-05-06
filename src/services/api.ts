@@ -6,24 +6,34 @@ const api = axios.create({
   timeout: 15000,
 })
 
-api.interceptors.request.use((config) => {
-  const authStore = useAuthStore()
-  if (authStore.token) {
-    config.headers.Authorization = `Bearer ${authStore.token}`
-  }
-  return config
+// Instance with extended timeout for slow operations (e.g. ingestion against remote DB)
+const apiSlow = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '',
+  timeout: 90000,
 })
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      const authStore = useAuthStore()
-      authStore.logout()
+function addAuthInterceptors(instance: ReturnType<typeof axios.create>) {
+  instance.interceptors.request.use((config) => {
+    const authStore = useAuthStore()
+    if (authStore.token) {
+      config.headers.Authorization = `Bearer ${authStore.token}`
     }
-    return Promise.reject(error)
-  }
-)
+    return config
+  })
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        const authStore = useAuthStore()
+        authStore.logout()
+      }
+      return Promise.reject(error)
+    }
+  )
+}
+
+addAuthInterceptors(api)
+addAuthInterceptors(apiSlow)
 
 // --- Auth ---
 export const authApi = {
@@ -67,7 +77,7 @@ export const statisticsApi = {
 // --- Ingestion ---
 export const ingestionApi = {
   ingestLeague: (leagueApiId: number, season: string, competitionName: string) =>
-    api.post(`/api/ingestion/leagues/${leagueApiId}`, null, { params: { season, competitionName } }),
+    apiSlow.post(`/api/ingestion/leagues/${leagueApiId}`, null, { params: { season, competitionName } }),
 }
 
 // --- Favorites ---

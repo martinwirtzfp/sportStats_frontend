@@ -93,6 +93,14 @@
           </ion-card-content>
         </ion-card>
 
+        <!-- Timeout (backend still processing) -->
+        <ion-card v-if="timeoutMessage" color="tertiary">
+          <ion-card-content>
+            <ion-icon :icon="timeOutline" style="vertical-align: middle; margin-right: 8px"></ion-icon>
+            {{ timeoutMessage }}
+          </ion-card-content>
+        </ion-card>
+
         <!-- Error -->
         <ion-card v-if="errorMessage" color="danger">
           <ion-card-content>
@@ -136,7 +144,7 @@ import {
   IonList, IonItem, IonLabel, IonInput, IonButton, IonSpinner,
   IonIcon, IonNote, IonText,
 } from '@ionic/vue';
-import { lockClosed, checkmarkCircle, alertCircle } from 'ionicons/icons';
+import { lockClosed, checkmarkCircle, alertCircle, timeOutline } from 'ionicons/icons';
 import { ingestionApi } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useTeamsStore } from '@/stores/teamsStore';
@@ -150,6 +158,7 @@ const competitionName = ref('');
 const loading = ref(false);
 const successMessage = ref('');
 const warningMessage = ref('');
+const timeoutMessage = ref('');
 const errorMessage = ref('');
 
 const seasonValid = computed(() => {
@@ -186,6 +195,7 @@ async function ingest() {
   loading.value = true;
   successMessage.value = '';
   warningMessage.value = '';
+  timeoutMessage.value = '';
   errorMessage.value = '';
   try {
     const response = await ingestionApi.ingestLeague(leagueApiId.value!, season.value.trim(), competitionName.value.trim());
@@ -198,8 +208,16 @@ async function ingest() {
       await teamsStore.fetchCompetitions();
     }
   } catch (err: any) {
-    const msg = err?.response?.data?.message || err?.message || 'Error desconocido';
-    errorMessage.value = `Error al importar: ${msg}`;
+    const isTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
+    if (isTimeout) {
+      timeoutMessage.value =
+        'La importación está tardando más de lo esperado (servidor lento). Los datos se están procesando en segundo plano. Recarga la app en unos segundos para ver los cambios.';
+      // Refresh anyway in case data was partially or fully imported
+      await teamsStore.fetchCompetitions();
+    } else {
+      const msg = err?.response?.data?.message || err?.message || 'Error desconocido';
+      errorMessage.value = `Error al importar: ${msg}`;
+    }
   } finally {
     loading.value = false;
   }
