@@ -7,14 +7,8 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- Liga + Temporada -->
+      <!-- Selector + Equipos -->
       <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Competición</ion-card-subtitle>
-          <ion-card-title>{{ selectedLeagueName || 'Selecciona una liga' }}</ion-card-title>
-          <ion-card-subtitle v-if="selectedSeason">Temporada {{ selectedSeason }}</ion-card-subtitle>
-          <ion-card-subtitle v-else-if="selectedLeagueApiId">Todas las temporadas</ion-card-subtitle>
-        </ion-card-header>
         <ion-card-content>
           <ion-item lines="none">
             <ion-label position="stacked">Liga</ion-label>
@@ -31,49 +25,44 @@
               <ion-select-option v-for="s in seasonsForLeague" :key="s" :value="s">{{ s }}</ion-select-option>
             </ion-select>
           </ion-item>
+          <div v-if="loadingTeams" class="ion-padding ion-text-center">
+            <ion-spinner name="crescent" color="primary"></ion-spinner>
+          </div>
+          <template v-else-if="selectedLeagueApiId">
+            <ion-grid>
+              <ion-row>
+                <ion-col>
+                  <ion-item>
+                    <ion-label position="stacked">Equipo 1</ion-label>
+                    <ion-select v-model="team1Id" placeholder="Seleccionar" interface="action-sheet">
+                      <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
+                        {{ t.name }}
+                      </ion-select-option>
+                    </ion-select>
+                  </ion-item>
+                </ion-col>
+                <ion-col>
+                  <ion-item>
+                    <ion-label position="stacked">Equipo 2</ion-label>
+                    <ion-select v-model="team2Id" placeholder="Seleccionar" interface="action-sheet">
+                      <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
+                        {{ t.name }}
+                      </ion-select-option>
+                    </ion-select>
+                  </ion-item>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+            <ion-button expand="block" :disabled="!team1Id || !team2Id || loading" @click="compare">
+              <ion-spinner v-if="loading" name="crescent" slot="start"></ion-spinner>
+              Comparar
+            </ion-button>
+          </template>
+          <div v-else class="ion-padding ion-text-center">
+            <p>Selecciona una liga para empezar.</p>
+          </div>
         </ion-card-content>
       </ion-card>
-
-      <!-- Selección de equipos -->
-      <div v-if="selectedLeagueApiId">
-        <div v-if="loadingTeams" class="ion-padding ion-text-center">
-          <ion-spinner name="crescent" color="primary"></ion-spinner>
-        </div>
-        <template v-else>
-          <ion-grid>
-            <ion-row>
-              <ion-col>
-                <ion-item>
-                  <ion-label position="stacked">Equipo 1</ion-label>
-                  <ion-select v-model="team1Id" placeholder="Seleccionar" interface="action-sheet">
-                    <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
-                      {{ t.name }}
-                    </ion-select-option>
-                  </ion-select>
-                </ion-item>
-              </ion-col>
-              <ion-col>
-                <ion-item>
-                  <ion-label position="stacked">Equipo 2</ion-label>
-                  <ion-select v-model="team2Id" placeholder="Seleccionar" interface="action-sheet">
-                    <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
-                      {{ t.name }}
-                    </ion-select-option>
-                  </ion-select>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-
-          <ion-button expand="block" :disabled="!team1Id || !team2Id || loading" @click="compare">
-            <ion-spinner v-if="loading" name="crescent" slot="start"></ion-spinner>
-            Comparar
-          </ion-button>
-        </template>
-      </div>
-      <div v-else class="ion-padding ion-text-center">
-        <p>Selecciona una liga para empezar.</p>
-      </div>
 
       <!-- Resultado H2H -->
       <div v-if="h2h">
@@ -159,7 +148,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButton, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
+  IonButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
   IonGrid, IonRow, IonCol, IonItem, IonLabel, IonSelect, IonSelectOption,
   IonList, IonSpinner, IonText,
 } from '@ionic/vue';
@@ -191,10 +180,6 @@ const uniqueLeagues = computed(() => {
   }
   return [...byApiId.values()].sort((a, b) => a.name.localeCompare(b.name));
 });
-
-const selectedLeagueName = computed(() =>
-  uniqueLeagues.value.find(l => l.apiId === selectedLeagueApiId.value)?.name ?? ''
-);
 
 const seasonsForLeague = computed(() =>
   teamsStore.competitions

@@ -9,12 +9,6 @@
     <ion-content class="ion-padding">
       <!-- Configuración -->
       <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Competición</ion-card-subtitle>
-          <ion-card-title>{{ selectedLeagueName || 'Selecciona una liga' }}</ion-card-title>
-          <ion-card-subtitle v-if="selectedSeason">Temporada {{ selectedSeason }}</ion-card-subtitle>
-          <ion-card-subtitle v-else-if="selectedLeagueApiId">Todas las temporadas</ion-card-subtitle>
-        </ion-card-header>
         <ion-card-content>
           <ion-item>
             <ion-label position="stacked">Liga</ion-label>
@@ -49,15 +43,6 @@
                 <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
                   {{ t.name }}
                 </ion-select-option>
-              </ion-select>
-            </ion-item>
-            <ion-item>
-              <ion-label position="stacked">Últimos N partidos</ion-label>
-              <ion-select v-model="lastN" interface="popover">
-                <ion-select-option :value="5">5</ion-select-option>
-                <ion-select-option :value="10">10</ion-select-option>
-                <ion-select-option :value="15">15</ion-select-option>
-                <ion-select-option :value="20">20</ion-select-option>
               </ion-select>
             </ion-item>
             <ion-button
@@ -197,7 +182,6 @@ const loadingTeams = ref(false);
 
 const homeTeamId = ref<number | null>(null);
 const awayTeamId = ref<number | null>(null);
-const lastN = ref(10);
 const risk = ref<RiskAnalysis | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -209,10 +193,6 @@ const uniqueLeagues = computed(() => {
   }
   return [...byApiId.values()].sort((a, b) => a.name.localeCompare(b.name));
 });
-
-const selectedLeagueName = computed(() =>
-  uniqueLeagues.value.find(l => l.apiId === selectedLeagueApiId.value)?.name ?? ''
-);
 
 const seasonsForLeague = computed(() =>
   teamsStore.competitions
@@ -300,7 +280,7 @@ async function calculate() {
   risk.value = null;
   try {
     const season = selectedSeason.value ?? undefined;
-    const { data } = await statisticsApi.getRisk(homeTeamId.value, awayTeamId.value, lastN.value, season);
+    const { data } = await statisticsApi.getRisk(homeTeamId.value, awayTeamId.value, 0, season);
     risk.value = data;
   } catch {
     error.value = 'No se pudieron calcular las probabilidades.';

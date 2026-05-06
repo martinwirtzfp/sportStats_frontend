@@ -141,7 +141,14 @@ watch(selectedLiga, (apiId) => {
     .map(c => c.season)
     .sort()
     .reverse();
-  selectedSeason.value = seasons[0] ?? null;
+  const latestSeason = seasons[0] ?? null;
+  if (selectedSeason.value === latestSeason && latestSeason) {
+    // La temporada no cambió de valor pero sí la liga — disparar carga manualmente
+    const comp = store.competitions.find(c => c.apiId === apiId && c.season === latestSeason);
+    if (comp) store.fetchTeamsBySeason(comp.id, latestSeason);
+  } else {
+    selectedSeason.value = latestSeason;
+  }
 });
 
 // Load teams when a season is selected
