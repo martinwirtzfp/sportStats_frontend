@@ -87,16 +87,17 @@ src/
 ├── types/
 │   └── index.ts           # Interfaces TypeScript (User, Team, Match, TeamStats, RiskAnalysis, HeadToHead...)
 ├── views/
-│   ├── TabsPage.vue            # Shell con ion-tab-bar
+│   ├── TabsPage.vue            # Shell con ion-tab-bar (5 tabs)
 │   ├── TeamsTab.vue            # Lista de equipos por competición
 │   ├── TeamDetailPage.vue      # Detalle + stats + partidos de un equipo
 │   ├── CompareTab.vue          # H2H entre dos equipos
 │   ├── CalculatorTab.vue       # Probabilidades de apuestas
+│   ├── IngestionTab.vue        # Importación de datos desde API-Football (requiere auth)
 │   ├── ProfileTab.vue          # Perfil + favoritos (maneja auth internamente)
 │   ├── LoginPage.vue           # Login → redirige a /tabs/profile
 │   └── RegisterPage.vue        # Registro → redirige a /tabs/profile
 └── components/
-    └── ExploreContainer.vue    # Componente de demo (sin uso real)
+    └── ExploreContainer.vue    # Scaffolding inicial de Ionic (no utilizado en producción)
 ```
 
 ---
@@ -109,6 +110,7 @@ src/
   teams               → TeamsTab
   compare             → CompareTab
   calculator          → CalculatorTab
+  ingestion           → IngestionTab
   profile             → ProfileTab  ← NO tiene requiresAuth (maneja auth internamente)
 /teams/:id            → TeamDetailPage
 /login                → LoginPage
@@ -189,12 +191,14 @@ teamsApi.getSeasons(id)          // GET /api/teams/{id}/seasons → List<string>
 matchesApi.getLastByTeam(teamId, lastN = 10)   // lastN=0 devuelve todos los partidos
 
 statisticsApi.getTeamStats(teamId, lastN = 10, season?)  // lastN=0 = todos
-statisticsApi.getRisk(homeTeamId, awayTeamId)                   // usa todos los datos hist&#243;ricos, ponderados por recencia
+statisticsApi.getRisk(homeTeamId, awayTeamId)  // usa todos los datos históricos ponderados por recencia (Poisson)
 statisticsApi.getH2H(team1Id, team2Id)
 
 favoritesApi.getAll()
 favoritesApi.add(teamId)
 favoritesApi.remove(teamId)
+
+ingestionApi.ingestLeague(leagueApiId, season, competitionName) // timeout 90s, requiere JWT
 ```
 
 ---
@@ -272,6 +276,14 @@ La función `pct(value)` en `CalculatorTab.vue` está implementada correctamente
 - `availableTeams`: cargado localmente vía `teamsApi.getAll(compId, season)` iterando sobre todas las competiciones de esa liga y fusionando equipos (dedup por `team.id`).
 - Cuando cambia la liga: resetea equipo 1/2 y resultados, recarga `availableTeams`.
 - No tiene `meta: { requiresAuth: true }` en el router.
+
+### IngestionTab.vue
+- Permite importar equipos y partidos desde API-Football.
+- Campos: `leagueApiId` (número de liga en API-Football), `season` (año), `competitionName` (nombre libre).
+- Requiere que el usuario esté autenticado (muestra aviso si no lo está).
+- Llama a `ingestionApi.ingestLeague(leagueApiId, season, competitionName)` — timeout configurado a **90s**.
+- Muestra mensajes de éxito o error en pantalla.
+- IDs útiles: La Liga=140, Premier League=39, Champions League=2, Serie A=135, Bundesliga=78.
 
 ### ProfileTab.vue
 - **No** tiene `meta: { requiresAuth: true }` en el router
