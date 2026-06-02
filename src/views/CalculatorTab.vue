@@ -25,7 +25,7 @@
             <ion-item>
               <ion-label position="stacked">Equipo local</ion-label>
               <ion-select v-model="homeTeamId" placeholder="Seleccionar" interface="action-sheet">
-                <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
+                <ion-select-option v-for="t in teamsForHome" :key="t.id" :value="t.id">
                   {{ t.name }}
                 </ion-select-option>
               </ion-select>
@@ -33,7 +33,7 @@
             <ion-item>
               <ion-label position="stacked">Equipo visitante</ion-label>
               <ion-select v-model="awayTeamId" placeholder="Seleccionar" interface="action-sheet">
-                <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
+                <ion-select-option v-for="t in teamsForAway" :key="t.id" :value="t.id">
                   {{ t.name }}
                 </ion-select-option>
               </ion-select>
@@ -177,6 +177,9 @@ const awayTeamId = ref<number | null>(null);
 const risk = ref<RiskAnalysis | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+
+const teamsForHome = computed(() => availableTeams.value.filter(t => t.id !== awayTeamId.value));
+const teamsForAway = computed(() => availableTeams.value.filter(t => t.id !== homeTeamId.value));
 
 const uniqueLeagues = computed(() => {
   const byApiId = new Map<number, typeof teamsStore.competitions[0]>();

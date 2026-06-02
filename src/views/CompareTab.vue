@@ -35,7 +35,7 @@
                   <ion-item>
                     <ion-label position="stacked">Equipo 1</ion-label>
                     <ion-select v-model="team1Id" placeholder="Seleccionar" interface="action-sheet">
-                      <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
+                      <ion-select-option v-for="t in teamsForTeam1" :key="t.id" :value="t.id">
                         {{ t.name }}
                       </ion-select-option>
                     </ion-select>
@@ -45,7 +45,7 @@
                   <ion-item>
                     <ion-label position="stacked">Equipo 2</ion-label>
                     <ion-select v-model="team2Id" placeholder="Seleccionar" interface="action-sheet">
-                      <ion-select-option v-for="t in availableTeams" :key="t.id" :value="t.id">
+                      <ion-select-option v-for="t in teamsForTeam2" :key="t.id" :value="t.id">
                         {{ t.name }}
                       </ion-select-option>
                     </ion-select>
@@ -266,6 +266,9 @@ const uniqueLeagues = computed(() => {
   }
   return [...byApiId.values()].sort((a, b) => a.name.localeCompare(b.name));
 });
+
+const teamsForTeam1 = computed(() => availableTeams.value.filter(t => t.id !== team2Id.value));
+const teamsForTeam2 = computed(() => availableTeams.value.filter(t => t.id !== team1Id.value));
 
 const seasonsForLeague = computed(() =>
   teamsStore.competitions

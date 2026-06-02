@@ -80,32 +80,60 @@
         <!-- Success -->
         <ion-card v-if="successMessage" color="success">
           <ion-card-content>
-            <ion-icon :icon="checkmarkCircle" style="vertical-align: middle; margin-right: 8px"></ion-icon>
-            {{ successMessage }}
+            <div class="msg-row">
+              <span>
+                <ion-icon :icon="checkmarkCircle" style="vertical-align: middle; margin-right: 8px"></ion-icon>
+                {{ successMessage }}
+              </span>
+              <ion-button fill="clear" size="small" color="light" @click="successMessage = ''" style="flex-shrink:0">
+                <ion-icon :icon="closeCircle" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
           </ion-card-content>
         </ion-card>
 
         <!-- Warning (0 items imported) -->
         <ion-card v-if="warningMessage" color="warning">
           <ion-card-content>
-            <ion-icon :icon="alertCircle" style="vertical-align: middle; margin-right: 8px"></ion-icon>
-            {{ warningMessage }}
+            <div class="msg-row">
+              <span>
+                <ion-icon :icon="alertCircle" style="vertical-align: middle; margin-right: 8px"></ion-icon>
+                {{ warningMessage }}
+              </span>
+              <ion-button fill="clear" size="small" color="dark" @click="warningMessage = ''" style="flex-shrink:0">
+                <ion-icon :icon="closeCircle" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
           </ion-card-content>
         </ion-card>
 
         <!-- Timeout (backend still processing) -->
         <ion-card v-if="timeoutMessage" color="tertiary">
           <ion-card-content>
-            <ion-icon :icon="timeOutline" style="vertical-align: middle; margin-right: 8px"></ion-icon>
-            {{ timeoutMessage }}
+            <div class="msg-row">
+              <span>
+                <ion-icon :icon="timeOutline" style="vertical-align: middle; margin-right: 8px"></ion-icon>
+                {{ timeoutMessage }}
+              </span>
+              <ion-button fill="clear" size="small" color="light" @click="timeoutMessage = ''" style="flex-shrink:0">
+                <ion-icon :icon="closeCircle" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
           </ion-card-content>
         </ion-card>
 
         <!-- Error -->
         <ion-card v-if="errorMessage" color="danger">
           <ion-card-content>
-            <ion-icon :icon="alertCircle" style="vertical-align: middle; margin-right: 8px"></ion-icon>
-            {{ errorMessage }}
+            <div class="msg-row">
+              <span>
+                <ion-icon :icon="alertCircle" style="vertical-align: middle; margin-right: 8px"></ion-icon>
+                {{ errorMessage }}
+              </span>
+              <ion-button fill="clear" size="small" color="light" @click="errorMessage = ''" style="flex-shrink:0">
+                <ion-icon :icon="closeCircle" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
           </ion-card-content>
         </ion-card>
 
@@ -144,7 +172,7 @@ import {
   IonList, IonItem, IonLabel, IonInput, IonButton, IonSpinner,
   IonIcon, IonNote, IonText,
 } from '@ionic/vue';
-import { lockClosed, checkmarkCircle, alertCircle, timeOutline } from 'ionicons/icons';
+import { lockClosed, checkmarkCircle, alertCircle, timeOutline, closeCircle } from 'ionicons/icons';
 import { ingestionApi } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useTeamsStore } from '@/stores/teamsStore';
@@ -232,5 +260,16 @@ async function ingest() {
   justify-content: center;
   min-height: 60vh;
   padding: 24px;
+}
+
+.msg-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.msg-row span {
+  flex: 1;
 }
 </style>
