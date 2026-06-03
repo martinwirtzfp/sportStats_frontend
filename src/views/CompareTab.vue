@@ -127,8 +127,8 @@
                 </ion-col>
                 <ion-col class="ion-text-center">
                   <p class="stat-label">Resultado mas repetido</p>
-                  <p class="stat-value">{{ h2h.mostCommonScore }}</p>
-                  <p class="stat-sub">({{ h2h.mostCommonScoreCount }} veces)</p>
+                  <p class="stat-value">{{ h2h.mostCommonScore === 'N/A' ? '–' : h2h.mostCommonScore }}</p>
+                  <p class="stat-sub" v-if="h2h.mostCommonScoreCount > 0">({{ h2h.mostCommonScoreCount }} veces)</p>
                 </ion-col>
               </ion-row>
             </ion-grid>

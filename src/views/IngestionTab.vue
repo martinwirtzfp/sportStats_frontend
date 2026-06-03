@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Ingestar datos</ion-title>
+        <ion-title>Ingesta de datos</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -207,8 +207,6 @@ const knownLeagues = [
   { id: 135, name: 'Serie A (Italia)' },
   { id: 78,  name: 'Bundesliga (Alemania)' },
   { id: 61,  name: 'Ligue 1 (Francia)' },
-  { id: 2,   name: 'UEFA Champions League' },
-  { id: 3,   name: 'UEFA Europa League' },
 ];
 
 function fillForm(league: { id: number; name: string }) {
