@@ -266,6 +266,7 @@ La función `pct(value)` en `CalculatorTab.vue` está implementada correctamente
 - Tiene selector de **liga** (`selectedLeagueApiId`) + selector de **temporada** (`selectedSeason`) ligado a esa liga.
 - Las temporadas disponibles se calculan de `teamsStore.competitions` filtrando por `apiId` de la liga seleccionada.
 - `availableTeams`: cargado localmente vía `teamsApi.getAll(compId, season)`. Para temporada "Todas", itera sobre todas las competiciones de esa liga y fusiona equipos (dedup por `team.id`).
+- `teamsForTeam1` / `teamsForTeam2`: computed que filtran `availableTeams` excluyendo el equipo ya seleccionado en el otro selector — impiden comparar un equipo consigo mismo.
 - Cuando cambia la liga: auto-selecciona la última temporada disponible, resetea equipo 1/2 y resultados.
 - Cuando cambia la temporada: resetea equipo 1/2 y resultados, recarga `availableTeams`.
 - Muestra nombre de liga y temporada en una tarjeta en la cabecera del contenido.
@@ -274,6 +275,7 @@ La función `pct(value)` en `CalculatorTab.vue` está implementada correctamente
 ### CalculatorTab.vue
 - Tiene selector de **liga** (`selectedLeagueApiId`). No hay selector de temporada — se usan todos los datos históricos del equipo.
 - `availableTeams`: cargado localmente vía `teamsApi.getAll(compId, season)` iterando sobre todas las competiciones de esa liga y fusionando equipos (dedup por `team.id`).
+- `teamsForHome` / `teamsForAway`: computed que filtran `availableTeams` excluyendo el equipo ya seleccionado en el otro selector — impiden calcular probabilidades de un equipo contra sí mismo.
 - Cuando cambia la liga: resetea equipo 1/2 y resultados, recarga `availableTeams`.
 - No tiene `meta: { requiresAuth: true }` en el router.
 
@@ -282,8 +284,9 @@ La función `pct(value)` en `CalculatorTab.vue` está implementada correctamente
 - Campos: `leagueApiId` (número de liga en API-Football), `season` (año), `competitionName` (nombre libre).
 - Requiere que el usuario esté autenticado (muestra aviso si no lo está).
 - Llama a `ingestionApi.ingestLeague(leagueApiId, season, competitionName)` — timeout configurado a **90s**.
-- Muestra mensajes de éxito o error en pantalla.
-- IDs útiles: La Liga=140, Premier League=39, Champions League=2, Serie A=135, Bundesliga=78.
+- Muestra mensajes de éxito, aviso, timeout y error en tarjetas dismissibles (botón × para cerrarlas).
+- Título de la toolbar: **"Ingesta de datos"**.
+- IDs útiles: La Liga=140, Premier League=39, Serie A=135, Bundesliga=78, Ligue 1=61.
 
 ### ProfileTab.vue
 - **No** tiene `meta: { requiresAuth: true }` en el router
@@ -328,6 +331,11 @@ Cada componente registra sus propios elementos de Chart.js con `ChartJS.register
 | `src/services/api.ts` — `matchesApi.getH2H` | Definida pero nunca importada/llamada desde ninguna vista | Eliminada |
 | `src/services/api.ts` — `export default api` | Instancia axios exportada como default pero nunca importada | Eliminado |
 | `src/stores/teamsStore.ts` — `selectedCompetitionId`, `availableSeasons`, `fetchTeams`, `selectCompetition` | Exportados pero nunca consumidos desde ningún componente | Eliminados del store |
+| `CompareTab.vue` / `CalculatorTab.vue` | Ambos selectores de equipo iteraban `availableTeams` sin excluir el equipo elegido en el otro selector → era posible comparar un equipo consigo mismo | Añadidos computed `teamsForTeam1`/`teamsForTeam2` (Compare) y `teamsForHome`/`teamsForAway` (Calculator) que filtran el equipo ya seleccionado |
+| `CompareTab.vue` | "Resultado más repetido" mostraba siempre algún marcador aunque ninguno se repitiese | Cuando `mostCommonScore === 'N/A'` muestra `–`; la línea "(X veces)" solo se renderiza si `mostCommonScoreCount > 0` |
+| `IngestionTab.vue` | Tarjetas de mensaje (éxito/aviso/timeout/error) no se podían cerrar | Añadido botón × (`closeCircle`) en cada tarjeta; icono `closeCircle` importado de ionicons |
+| `IngestionTab.vue` | Título de toolbar "Ingestar datos" — incorrecto gramaticalmente | Cambiado a "Ingesta de datos" |
+| `IngestionTab.vue` | Lista de ligas conocidas incluía UEFA Champions League (2) y UEFA Europa League (3) | Eliminadas; lista queda con La Liga, Premier League, Serie A, Bundesliga, Ligue 1 |
 
 ---
 
