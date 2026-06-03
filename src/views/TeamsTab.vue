@@ -87,6 +87,7 @@ import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonList, IonItem, IonLabel, IonAvatar, IonButton, IonIcon,
   IonSelect, IonSelectOption, IonSpinner, IonRefresher, IonRefresherContent,
+  onIonViewWillEnter
 } from '@ionic/vue';
 import { heart, heartOutline } from 'ionicons/icons';
 import { useTeamsStore } from '@/stores/teamsStore';
@@ -102,11 +103,10 @@ const authStore = useAuthStore();
 const selectedLiga = ref<number | null>(null);
 const selectedSeason = ref<string | null>(null);
 
-// One entry per unique apiId, keeping the most recently imported name for display
 const uniqueLeagues = computed(() => {
   const byApiId = new Map<number, typeof store.competitions[0]>();
   for (const c of store.competitions) {
-    byApiId.set(c.apiId, c); // last-write wins (most recent import name)
+    byApiId.set(c.apiId, c); 
   }
   return [...byApiId.values()].sort((a, b) => a.name.localeCompare(b.name));
 });
@@ -129,7 +129,6 @@ const selectedLigaName = computed(() =>
   uniqueLeagues.value.find(l => l.apiId === selectedLiga.value)?.name ?? ''
 );
 
-// When liga changes, auto-select the latest available season for it
 watch(selectedLiga, (apiId) => {
   store.clearTeams();
   if (!apiId) {
@@ -143,7 +142,6 @@ watch(selectedLiga, (apiId) => {
     .reverse();
   const latestSeason = seasons[0] ?? null;
   if (selectedSeason.value === latestSeason && latestSeason) {
-    // La temporada no cambió de valor pero sí la liga — disparar carga manualmente
     const comp = store.competitions.find(c => c.apiId === apiId && c.season === latestSeason);
     if (comp) store.fetchTeamsBySeason(comp.id, latestSeason);
   } else {
@@ -151,7 +149,6 @@ watch(selectedLiga, (apiId) => {
   }
 });
 
-// Load teams when a season is selected
 watch(selectedSeason, (season) => {
   if (selectedCompetition.value && season) {
     store.fetchTeamsBySeason(selectedCompetition.value.id, season);
@@ -160,10 +157,13 @@ watch(selectedSeason, (season) => {
 
 onMounted(async () => {
   await store.fetchCompetitions();
-  // Auto-select the first liga; watch(selectedLiga) will auto-set the season and trigger team fetch
   if (store.competitions.length > 0) {
     selectedLiga.value = uniqueLeagues.value[0]?.apiId ?? null;
   }
+});
+
+// Forzamos que los favoritos se refresquen cada vez que se visualiza la pestaña
+onIonViewWillEnter(() => {
   if (authStore.isLoggedIn) {
     favStore.fetch();
   }

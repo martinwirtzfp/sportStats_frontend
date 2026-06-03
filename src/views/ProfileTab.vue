@@ -72,13 +72,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonCard, IonCardContent, IonList, IonListHeader, IonLabel,
   IonItem, IonItemSliding, IonItemOptions, IonItemOption,
   IonAvatar, IonButton, IonButtons, IonIcon, IonSpinner,
+  onIonViewWillEnter
 } from '@ionic/vue';
 import { personCircle, logOut, trash } from 'ionicons/icons';
 import { useAuthStore } from '@/stores/authStore';
@@ -88,7 +88,8 @@ const router = useRouter();
 const authStore = useAuthStore();
 const favStore = useFavoritesStore();
 
-onMounted(() => {
+// Usamos el ciclo de vida de Ionic para que se ejecute SIEMPRE que entremos a la pestaña
+onIonViewWillEnter(() => {
   if (authStore.isLoggedIn) {
     favStore.fetch();
   }
